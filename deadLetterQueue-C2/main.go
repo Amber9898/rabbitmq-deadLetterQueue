@@ -15,6 +15,7 @@ func main() {
 }
 
 func initConsumer2() {
+	//获取mq连接
 	url := fmt.Sprintf("amqp://%s:%s@%s:5672/", mqUtils.MQ_USER, mqUtils.MQ_PWD, mqUtils.MQ_ADDR)
 	con, err := amqp.Dial(url)
 	if err != nil {
@@ -22,12 +23,14 @@ func initConsumer2() {
 		return
 	}
 
+	//获取channel
 	ch, err := con.Channel()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
+	//消费死信队列中的消息
 	msgs, err := ch.Consume(
 		DEAD_QUEUE,
 		"c2",
@@ -45,7 +48,7 @@ func initConsumer2() {
 	forever := make(chan interface{})
 	go func() {
 		for msg := range msgs {
-			fmt.Println("c1 receive msg -->", string(msg.Body))
+			fmt.Println("c2 receive dead msg -->", string(msg.Body))
 		}
 	}()
 

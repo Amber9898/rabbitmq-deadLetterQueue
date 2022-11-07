@@ -66,11 +66,11 @@ func initConsumer1() {
 	args := amqp.Table{
 		"x-dead-letter-exchange":    DEAD_EXCHANGE,   //死信队列交换机
 		"x-dead-letter-routing-key": DEAD_ROUTINGKEY, //死信队列routing key
-		"x-message-ttl":             1000,            //ttl 消息存活时间
+		//"x-max-length":              2,               //测试二：队列最大长度
 	}
 	normal_q, err := ch.QueueDeclare(
 		NORMAL_QUEUE,
-		true,
+		false,
 		false,
 		false,
 		false,
@@ -80,7 +80,7 @@ func initConsumer1() {
 	// 4. 声明 dead_queue
 	dead_q, err := ch.QueueDeclare(
 		DEAD_QUEUE,
-		true,
+		false,
 		false,
 		false,
 		false,
@@ -117,7 +117,7 @@ func initConsumer1() {
 	msgs, err := ch.Consume(
 		normal_q.Name,
 		"c1",
-		true,
+		false, //测试三：拒绝特定消息
 		false,
 		false,
 		false,
@@ -131,7 +131,14 @@ func initConsumer1() {
 	forever := make(chan interface{})
 	go func() {
 		for msg := range msgs {
-			fmt.Println("c1 receive msg -->", string(msg.Body))
+			if string(msg.Body) == "msg-5" {
+				fmt.Println("c1 abandon normal msg -->", string(msg.Body))
+				msg.Nack(false, false) //拒绝消息
+			} else {
+				fmt.Println("c1 receive normal msg -->", string(msg.Body))
+				msg.Ack(false) //确认消息
+			}
+
 		}
 	}()
 

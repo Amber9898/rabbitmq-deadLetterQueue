@@ -25,12 +25,14 @@ func main() {
 	for i := 0; i < 10; i++ {
 		msg := fmt.Sprintf("msg-%d", i)
 		publishMessage(msg)
+		//time.Sleep(time.Second * 3)
 	}
 
 }
 
 func publishMessage(msg string) {
 	if mqCh == nil {
+		fmt.Println("channel is nil")
 		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -44,8 +46,10 @@ func publishMessage(msg string) {
 		amqp.Publishing{
 			ContentType: "text/plain",
 			Body:        []byte(msg),
+			//Expiration:  "5000", //测试一： 设置过期时间为5s
 		},
 	)
+	fmt.Println("publish msg--->", msg)
 }
 func initPublisher() {
 	url := fmt.Sprintf("amqp://%s:%s@%s:5672/", mqUtils.MQ_USER, mqUtils.MQ_PWD, mqUtils.MQ_ADDR)
